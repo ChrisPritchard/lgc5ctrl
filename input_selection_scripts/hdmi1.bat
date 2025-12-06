@@ -1,0 +1,1 @@
+..\lgc5ctrl.exe INPUT_SELECT hdmi1
