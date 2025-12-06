@@ -6,6 +6,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/pbkdf2"
+	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"net"
@@ -46,9 +47,8 @@ func main() {
 }
 
 func encode(key []byte, message string) []byte {
-	// iv := make([]byte, bsze)
-	// rand.Read(iv)
-	iv := []byte{0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42}
+	iv := make([]byte, bsze)
+	rand.Read(iv)
 
 	padded := message
 	if len(message)%bsze == 0 {
