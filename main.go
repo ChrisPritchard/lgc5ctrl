@@ -32,7 +32,12 @@ func main() {
 
 	key, _ := pbkdf2.Key(sha256.New, pass, salt, iter, bsze)
 
-	conn.Write(encode(key, "MUTE_STATE\r"))
+	cmd := strings.Join(os.Args[1:], " ")
+	if len(cmd) == 0 {
+		cmd = "MUTE_STATE"
+	}
+
+	conn.Write(encode(key, cmd+"\r"))
 
 	buffer := make([]byte, 4096)
 	n, _ := conn.Read(buffer)
