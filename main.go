@@ -24,29 +24,25 @@ var salt = []byte{0x63, 0x61, 0xb8, 0x0e, 0x9b, 0xdc, 0xa6, 0x63, 0x8d, 0x07, 0x
 var iter = 16384
 var bsze = 16
 
+var verbose bool
+
 func main() {
 
-	var verbose, conn, pass = get_settings()
+	var conn, pass = get_settings()
 	defer conn.Close()
 
 	command := strings.Join(flag.Args(), " ")
 	if command == "" {
-		if verbose {
-			fmt.Printf("a command was not specified, defaulting to %s\n", default_command)
-		}
+		vprintfln("a command was not specified, defaulting to %s", default_command)
 		command = default_command
 	}
 
 	key, _ := pbkdf2.Key(sha256.New, pass, salt, iter, bsze)
-	if verbose {
-		fmt.Printf("generated key: %x\n", key)
-	}
+	vprintfln("generated key: %x", key)
 
 	encoded_command := encode(key, command+"\r")
-	if verbose {
-		fmt.Printf("encoded command: %x\n", encoded_command)
-		fmt.Println("sending...")
-	}
+	vprintfln("encoded command: %x", encoded_command)
+	vprintfln("sending...")
 
 	conn.Write(encoded_command)
 
@@ -54,40 +50,29 @@ func main() {
 	n, _ := conn.Read(buffer)
 
 	if n == 0 {
-		if verbose {
-			fmt.Println("no response received")
-		}
+		vprintfln("no response received")
 		return
 	}
 
 	response := buffer[:n]
-
-	if verbose {
-		fmt.Printf("received encoded: %x\n", response)
-	}
-
+	vprintfln("received encoded: %x", response)
 	fmt.Print(decode(key, response))
 }
 
-func get_conn(host string, port int, verbose bool) net.Conn {
+func get_conn(host string, port int) net.Conn {
 	full_host := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	if verbose {
-		fmt.Printf("trying to connect to %s...\n", full_host)
-	}
+	vprintfln("trying to connect to %s...", full_host)
+
 	conn, err := net.DialTimeout("tcp", full_host, 1*time.Second)
 	if err != nil {
-		if verbose {
-			fmt.Printf("unable to connect to tv on host %s\n", full_host)
-		}
+		vprintfln("unable to connect to tv on host %s", full_host)
 		return nil
 	}
-	if verbose {
-		fmt.Printf("successfully connected to tv on %s\n", full_host)
-	}
+	vprintfln("successfully connected to tv on %s", full_host)
 	return conn
 }
 
-func get_settings() (verbose bool, conn net.Conn, pass string) {
+func get_settings() (conn net.Conn, pass string) {
 	var (
 		help      = flag.Bool("h", false, "Print help")
 		host_flag = flag.String("i", "", "TV host address - if not specified autodiscover")
@@ -113,13 +98,11 @@ func get_settings() (verbose bool, conn net.Conn, pass string) {
 	}
 
 	if *host_flag != "" {
-		conn = get_conn(*host_flag, *port_flag, verbose)
+		conn = get_conn(*host_flag, *port_flag)
 	}
 
 	if conn == nil && *network != "" {
-		if verbose {
-			fmt.Printf("scanning network %s...\n", *network)
-		}
+		vprintfln("scanning network %s...", *network)
 		ips, err := scan_network(*network, *port_flag, 2*time.Second)
 		if err != nil {
 			fmt.Println(err)
@@ -131,7 +114,7 @@ func get_settings() (verbose bool, conn net.Conn, pass string) {
 		}
 		fmt.Printf("tv found at ip %s\n", ips[0])
 
-		conn = get_conn(ips[0], *port_flag, verbose)
+		conn = get_conn(ips[0], *port_flag)
 		if conn == nil {
 			fmt.Printf("unable to connect to %s on port %d\n", ips[0], *port_flag)
 			os.Exit(1)
@@ -153,15 +136,13 @@ func get_settings() (verbose bool, conn net.Conn, pass string) {
 		os.Exit(1)
 	}
 
-	if verbose {
-		fmt.Println("updating .env cache")
-	}
+	vprintfln("updating .env cache")
 	err := os.WriteFile(".env", fmt.Appendf(nil, "TV_HOST=%s\nTV_PASS=%s\n", *host_flag, *pass_flag), 0644)
 	if err != nil {
 		panic(err)
 	}
 
-	return verbose, conn, *pass_flag
+	return conn, *pass_flag
 }
 
 func scan_network(cidr string, port int, timeout time.Duration) ([]string, error) {
@@ -306,4 +287,11 @@ func load_env(filename string) error {
 	}
 
 	return scanner.Err()
+}
+
+func vprintfln(format string, a ...any) {
+	if !verbose {
+		return
+	}
+	fmt.Printf(format+"\n", a...)
 }
