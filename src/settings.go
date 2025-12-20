@@ -2,12 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/pbkdf2"
-	"crypto/rand"
-	"crypto/sha256"
 	"flag"
 	"fmt"
 	"net"
@@ -17,59 +11,29 @@ import (
 	"time"
 )
 
-var default_command = "MUTE_STATE"
-var default_port = 9761
-
-var salt = []byte{0x63, 0x61, 0xb8, 0x0e, 0x9b, 0xdc, 0xa6, 0x63, 0x8d, 0x07, 0x20, 0xf2, 0xcc, 0x56, 0x8f, 0xb9}
-var iter = 16384
-var bsze = 16
-
-var verbose bool
-
-func main() {
-
-	var conn, pass = get_settings()
-	defer conn.Close()
-
-	command := strings.Join(flag.Args(), " ")
-	if command == "" {
-		vprintfln("a command was not specified, defaulting to %s", default_command)
-		command = default_command
-	}
-
-	key, _ := pbkdf2.Key(sha256.New, pass, salt, iter, bsze)
-	vprintfln("generated key: %x", key)
-
-	encoded_command := encode(key, command+"\r")
-	vprintfln("encoded command: %x", encoded_command)
-	vprintfln("sending...")
-
-	conn.Write(encoded_command)
-
-	buffer := make([]byte, 4096)
-	n, _ := conn.Read(buffer)
-
-	if n == 0 {
-		vprintfln("no response received")
-		return
-	}
-
-	response := buffer[:n]
-	vprintfln("received encoded: %x", response)
-	fmt.Print(decode(key, response))
-}
-
-func get_conn(host string, port int) net.Conn {
-	full_host := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	vprintfln("trying to connect to %s...", full_host)
-
-	conn, err := net.DialTimeout("tcp", full_host, 1*time.Second)
+func load_env(filename string) error {
+	file, err := os.Open(filename)
 	if err != nil {
-		vprintfln("unable to connect to tv on host %s", full_host)
-		return nil
+		return err
 	}
-	vprintfln("successfully connected to tv on %s", full_host)
-	return conn
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			os.Setenv(key, value)
+		}
+	}
+
+	return scanner.Err()
 }
 
 func get_settings() (conn net.Conn, pass string) {
@@ -207,6 +171,19 @@ func scan_network(cidr string, port int, timeout time.Duration) ([]string, error
 	return foundIPs, nil
 }
 
+func get_conn(host string, port int) net.Conn {
+	full_host := net.JoinHostPort(host, fmt.Sprintf("%d", port))
+	vprintfln("trying to connect to %s...", full_host)
+
+	conn, err := net.DialTimeout("tcp", full_host, 1*time.Second)
+	if err != nil {
+		vprintfln("unable to connect to tv on host %s", full_host)
+		return nil
+	}
+	vprintfln("successfully connected to tv on %s", full_host)
+	return conn
+}
+
 func inc(ip net.IP) {
 	for j := len(ip) - 1; j >= 0; j-- {
 		ip[j]++
@@ -214,84 +191,4 @@ func inc(ip net.IP) {
 			break
 		}
 	}
-}
-
-func encode(key []byte, message string) []byte {
-	iv := make([]byte, bsze)
-	rand.Read(iv)
-
-	padded := message
-	if len(message)%bsze == 0 {
-		padded += " "
-	} else {
-		padding := len(padded) % bsze
-		padded += string(bytes.Repeat([]byte{byte(bsze - padding)}, bsze-padding))
-	}
-
-	aes, _ := aes.NewCipher(key)
-	ivEnc := make([]byte, bsze)
-	aes.Encrypt(ivEnc, iv)
-
-	dataEnc := make([]byte, len(padded))
-	cbc := cipher.NewCBCEncrypter(aes, iv)
-	cbc.CryptBlocks(dataEnc, []byte(padded))
-
-	return append(ivEnc, dataEnc...)
-}
-
-func decode(key []byte, enc []byte) string {
-
-	ivEnc := enc[:bsze]
-	dataEnc := enc[bsze:]
-
-	aes, _ := aes.NewCipher(key)
-	iv := make([]byte, bsze)
-	aes.Decrypt(iv, ivEnc)
-
-	data := make([]byte, len(dataEnc))
-	cbc := cipher.NewCBCDecrypter(aes, iv)
-	cbc.CryptBlocks(data, dataEnc)
-
-	padByte := int(data[len(data)-1])
-	if padByte < bsze {
-		data = data[:len(data)-padByte]
-	}
-
-	if len(data) > 0 && data[len(data)-1] == ' ' {
-		data = data[:len(data)-1]
-	}
-
-	return string(data)
-}
-
-func load_env(filename string) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if len(line) == 0 || strings.HasPrefix(line, "#") {
-			continue
-		}
-
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-			os.Setenv(key, value)
-		}
-	}
-
-	return scanner.Err()
-}
-
-func vprintfln(format string, a ...any) {
-	if !verbose {
-		return
-	}
-	fmt.Printf(format+"\n", a...)
 }
