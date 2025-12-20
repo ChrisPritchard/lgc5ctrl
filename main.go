@@ -29,7 +29,7 @@ func main() {
 	var verbose, conn, pass = get_settings()
 	defer conn.Close()
 
-	command := flag.Arg(0)
+	command := strings.Join(flag.Args(), " ")
 	if command == "" {
 		if verbose {
 			fmt.Printf("a command was not specified, defaulting to %s\n", default_command)
@@ -80,6 +80,9 @@ func get_conn(host string, port int, verbose bool) net.Conn {
 			fmt.Printf("unable to connect to tv on host %s\n", full_host)
 		}
 		return nil
+	}
+	if verbose {
+		fmt.Printf("successfully connected to tv on %s\n", full_host)
 	}
 	return conn
 }
@@ -150,7 +153,9 @@ func get_settings() (verbose bool, conn net.Conn, pass string) {
 		os.Exit(1)
 	}
 
-	fmt.Println("updating .env cache")
+	if verbose {
+		fmt.Println("updating .env cache")
+	}
 	err := os.WriteFile(".env", fmt.Appendf(nil, "TV_HOST=%s\nTV_PASS=%s\n", *host_flag, *pass_flag), 0644)
 	if err != nil {
 		panic(err)
