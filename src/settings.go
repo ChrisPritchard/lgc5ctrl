@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+// argument parsing functions plus a parser for local .env files. also includes a small port scanner to find the tv bases on a cidr network
+
+var default_port = 9761
+
 func load_env(filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {

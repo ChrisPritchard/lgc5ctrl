@@ -4,8 +4,21 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/pbkdf2"
 	"crypto/rand"
+	"crypto/sha256"
 )
+
+// functions for the encoding / deconding of messages to the TV, which is symmetric and based on a pass code set up on the TV itself
+
+var salt = []byte{0x63, 0x61, 0xb8, 0x0e, 0x9b, 0xdc, 0xa6, 0x63, 0x8d, 0x07, 0x20, 0xf2, 0xcc, 0x56, 0x8f, 0xb9}
+var iter = 16384
+var bsze = 16
+
+func get_key(pass string) []byte {
+	key, _ := pbkdf2.Key(sha256.New, pass, salt, iter, bsze)
+	return key
+}
 
 func encode(key []byte, message string) []byte {
 	iv := make([]byte, bsze)

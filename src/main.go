@@ -1,20 +1,12 @@
 package main
 
 import (
-	"crypto/pbkdf2"
-	"crypto/sha256"
 	"flag"
 	"fmt"
 	"strings"
 )
 
 var default_command = "MUTE_STATE"
-var default_port = 9761
-
-var salt = []byte{0x63, 0x61, 0xb8, 0x0e, 0x9b, 0xdc, 0xa6, 0x63, 0x8d, 0x07, 0x20, 0xf2, 0xcc, 0x56, 0x8f, 0xb9}
-var iter = 16384
-var bsze = 16
-
 var verbose bool
 
 func main() {
@@ -28,7 +20,7 @@ func main() {
 		command = default_command
 	}
 
-	key, _ := pbkdf2.Key(sha256.New, pass, salt, iter, bsze)
+	key := get_key(pass)
 	vprintfln("generated key: %x", key)
 
 	encoded_command := encode(key, command+"\r")
