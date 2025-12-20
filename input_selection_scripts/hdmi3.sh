@@ -1,2 +1,2 @@
 #!/bin/bash
-../lgc5ctrl INPUT_SELECT hdmi3
+../lgc5ctrl -n "193.168.68.0/24" INPUT_SELECT hdmi3
