@@ -10,6 +10,7 @@ import (
 )
 
 // functions for the encoding / deconding of messages to the TV, which is symmetric and based on a pass code set up on the TV itself
+// spec can be seen defined in ./LG_IP.pdf
 
 var salt = []byte{0x63, 0x61, 0xb8, 0x0e, 0x9b, 0xdc, 0xa6, 0x63, 0x8d, 0x07, 0x20, 0xf2, 0xcc, 0x56, 0x8f, 0xb9}
 var iter = 16384

@@ -1,10 +1,6 @@
 # LG Controller
 
-Go-based tool to control a LG (later model) TV using IP Control functionality.
-
-Based on the [node implementation by Wes Souza](https://github.com/WesSouza/lgtv-ip-control)
-
-Tested and used heavily on a 42" LG C5 (OLED42C54LA)
+Go-based tool to control a LG (later model) TV using IP Control functionality. It probably works with other devices, though I am not sure if the encryption method is shared in other realms. Tested and used heavily on a 42" LG C5 (OLED42C54LA)
 
 ## usage
 
@@ -25,4 +21,13 @@ Some examples of what can be used:
 - `VOLUME_CONTROL 10` sets volume to 10
 - `INPUT_SELECT hdmi1` switches to the hdmi1 input source (this switching is why I built this, because the stupid 'smart' remote the TV ships with makes source switching a chore)
 
-A doc I found online with all the commands (mostly) is here: <https://www.proaudioinc.com/Dealer_Area/RS232C_EN_160526.pdf>. There are also some manuals in Wes' implementation. Most things can be controlled, though annoyingly not 'sound input' (e.g. switching between TV speaker and an HDMI ARC device), however for those cases you can send individual key inputs over multiple invocations (e.g. settings menu, wait, right, wait, and so on) - key commands are in the manual.
+Most things can be controlled, though annoyingly not 'sound input' (e.g. switching between TV speaker and an HDMI ARC device), however for those cases you can send individual key inputs over multiple invocations (e.g. settings menu, wait, right, wait, and so on) - key commands are in the manual.
+
+You can find all possible commands and settings in the reference docs:
+
+- [LG_IP.pdf](./LG_IP.pdf) (also includes the encryption specification)
+- [LG_RS232_IP_legacy.pdf](./LG_RS232_IP_legacy.pdf) (IP Control section)
+
+## credits
+
+Based on the [node implementation by Wes Souza](https://github.com/WesSouza/lgtv-ip-control). The reference docs were copied from there.
