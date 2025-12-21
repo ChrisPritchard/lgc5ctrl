@@ -1,3 +1,5 @@
 .env
 lgc5ctrl.exe
 lgc5ctrl
+*.sh
+*.bat
