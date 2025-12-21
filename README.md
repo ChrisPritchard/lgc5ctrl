@@ -10,6 +10,7 @@ Tested and used heavily on a 42" LG C5 (OLED42C54LA)
 
 `-h` will print info. The basic needs of the tool are:
 
+- a mac address - IF provided the tool will attempt to turn the TV on via the wake on lan feature. it will then exit - note no other settings are considered (except verbose mode) if a mac is specified
 - an IP address. If not specified via `-i` it will try and load one from a `.env` file or the environment args as `TV_HOST`
 - a port, the default is 9761 but can be overridden with `-p`
 - a IP Control password via `-w`, that you need to gather when you enable IP Control

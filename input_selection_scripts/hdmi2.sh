@@ -1,2 +1,0 @@
-#!/bin/bash
-../lgc5ctrl -n "193.168.68.0/24" INPUT_SELECT hdmi2

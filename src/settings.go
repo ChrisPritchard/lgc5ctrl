@@ -47,7 +47,7 @@ func get_settings() (conn net.Conn, pass string) {
 		pass_flag    = flag.String("w", "", "IP Control Passphrase")
 		port_flag    = flag.Int("p", default_port, "IP Control TV port")
 		network      = flag.String("n", "", "Autodiscover tv on this CIDR")
-		mac          = flag.String("mac", "", "MAC address of TV; if present a wake on lan will be sent")
+		mac          = flag.String("m", "", "MAC address of TV; if present a wake on lan will be sent")
 		verbose_flag = flag.Bool("v", false, "Verbose output")
 	)
 
