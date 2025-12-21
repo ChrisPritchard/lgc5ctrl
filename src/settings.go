@@ -104,6 +104,7 @@ func get_settings() (conn net.Conn, pass string) {
 
 	if conn == nil {
 		fmt.Println("a host for the tv must be specified, or a network to scan specified")
+		flag.Usage()
 		os.Exit(1)
 	}
 
@@ -112,6 +113,7 @@ func get_settings() (conn net.Conn, pass string) {
 	}
 	if *pass_flag == "" {
 		fmt.Println("IP control requires a pass configured on the tv and specified")
+		flag.Usage()
 		os.Exit(1)
 	}
 
