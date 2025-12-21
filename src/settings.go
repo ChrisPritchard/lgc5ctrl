@@ -42,12 +42,12 @@ func load_env(filename string) error {
 
 func get_settings() (conn net.Conn, pass string) {
 	var (
-		help      = flag.Bool("h", false, "Print help")
-		host_flag = flag.String("i", "", "TV host address - if not specified autodiscover")
-		pass_flag = flag.String("w", "", "IP Control Passphrase")
-		port_flag = flag.Int("p", default_port, "IP Control TV port")
-		network   = flag.String("n", "", "Autodiscover tv on this CIDR")
-		//mac     = flag.String("mac", "", "MAC address of TV, to turn it on if off")
+		help         = flag.Bool("h", false, "Print help")
+		host_flag    = flag.String("i", "", "TV host address - if not specified autodiscover")
+		pass_flag    = flag.String("w", "", "IP Control Passphrase")
+		port_flag    = flag.Int("p", default_port, "IP Control TV port")
+		network      = flag.String("n", "", "Autodiscover tv on this CIDR")
+		mac          = flag.String("mac", "", "MAC address of TV; if present a wake on lan will be sent")
 		verbose_flag = flag.Bool("v", false, "Verbose output")
 	)
 
@@ -58,6 +58,17 @@ func get_settings() (conn net.Conn, pass string) {
 	}
 
 	verbose = *verbose_flag
+
+	if *mac != "" {
+		vprintfln("mac provided, sending wake on lan")
+		err := send_wake(*mac)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		vprintfln("completed")
+		os.Exit(0)
+	}
 
 	load_env(".env")
 
@@ -173,19 +184,6 @@ func scan_network(cidr string, port int, timeout time.Duration) ([]string, error
 	}
 
 	return foundIPs, nil
-}
-
-func get_conn(host string, port int) net.Conn {
-	full_host := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	vprintfln("trying to connect to %s...", full_host)
-
-	conn, err := net.DialTimeout("tcp", full_host, 1*time.Second)
-	if err != nil {
-		vprintfln("unable to connect to tv on host %s", full_host)
-		return nil
-	}
-	vprintfln("successfully connected to tv on %s", full_host)
-	return conn
 }
 
 func inc(ip net.IP) {

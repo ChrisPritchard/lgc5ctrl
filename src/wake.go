@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 )
@@ -13,6 +14,26 @@ var wake_port = 9
 var wake_sync_count = 6
 var wake_magic_byte byte = 0xff
 var wake_address_count = 16
+
+func send_wake(mac string) error {
+	packet, err := wake_packet(mac)
+	if err != nil {
+		return err
+	}
+
+	addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(wake_address, fmt.Sprintf("%d", wake_port)))
+	if err != nil {
+		return err
+	}
+
+	conn, err := net.DialUDP("udp", nil, addr)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Write(packet)
+	return err
+}
 
 func wake_packet(mac string) ([]byte, error) {
 

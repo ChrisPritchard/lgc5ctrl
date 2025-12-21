@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"strings"
+	"time"
 )
 
 var default_command = "MUTE_STATE"
@@ -40,6 +42,19 @@ func main() {
 	response := buffer[:n]
 	vprintfln("received encoded: %x", response)
 	fmt.Print(decode(key, response))
+}
+
+func get_conn(host string, port int) net.Conn {
+	full_host := net.JoinHostPort(host, fmt.Sprintf("%d", port))
+	vprintfln("trying to connect to %s...", full_host)
+
+	conn, err := net.DialTimeout("tcp", full_host, 1*time.Second)
+	if err != nil {
+		vprintfln("unable to connect to tv on host %s", full_host)
+		return nil
+	}
+	vprintfln("successfully connected to tv on %s", full_host)
+	return conn
 }
 
 func vprintfln(format string, a ...any) {
