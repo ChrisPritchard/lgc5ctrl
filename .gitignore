@@ -4,3 +4,4 @@ lgc5ctrl
 *.sh
 *.bat
 *.lnk
+.DS_STORE
